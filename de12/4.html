@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="jp">
+<head>
+    <title>デザイン演習-4</title>
+    <link rel="stylesheet" href="./css/style-test.css">
+</head>
+<body>
+    <h1>Pythonライブラリを使ったプログラミング</h1>
+    <h2>2024/11/18</h2><br>
+    <h3>【使用したライブラリ】</h3>
+    <div>
+        前回がクソゲーを制作する課題だったので、折角ならそれを進化させよう！！<br>
+        と思いながらライブラリやネットで調べていたところ、”Pyxel”というドット絵の<br>
+        ゲームが作れちゃうライブラリを見つけ出しました！！<br>
+        このライブラリの仕様は、<br>
+        <ul>
+            <li>Windows、Mac、Linux、Web で動作</li>
+            <li>Python によるプログラミング</li>
+            <li>16 色パレット</li>
+            <li>256x256 サイズ、3 イメージバンク</li>
+            <li>256x256 サイズ、8 タイルマップ</li>
+            <li>4 音同時再生、定義可能な 64 サウンド</li>
+            <li>任意のサウンドを組み合わせ可能な 8 ミュージック</li>
+            <li>キーボード、マウス、ゲームパッド入力</li>
+            <li>画像・サウンド編集ツール</li>
+            <li>パレット、発音数、各種バンクのユーザー拡張</li>
+        </ul>
+        となっており、非常に高機能です！<br>
+        その他にも様々な特徴があるので、まずは下記のリンクを確認してみてください！！<br>
+        こんなこともできるの！？と、きっと驚くはずです笑笑<br>
+        <br>
+        リンク：<a href="https://github.com/kitao/pyxel/blob/main/docs/README.ja.md" target="_blank">Pyxel-readme-jp</a>
+        <br>
+        <h3>【サンプルコードを動かす】</h3>
+        とにもかくにも、コードが動かないと話にならないので、まずはサンプルコード<br>
+        を動かしてみました！<br>
+        使用したコードは、公式が公開してくれているサンプルの中でも一番シンプルな<br>
+        コードです。<br>
+        <br>
+        ※このコードの実行にはPyxelのインストールが必須です。<br>
+        ※ウェブ版→<a href="https://kitao.github.io/pyxel/wasm/examples/01_hello_pyxel.html" target="_blank">デモ1</a>
+<pre><code>
+import pyxel
+    
+    
+class App:
+    def __init__(self):
+        pyxel.init(160, 120, title="Hello Pyxel")
+        pyxel.images[0].load(0, 0, "assets/pyxel_logo_38x16.png")
+        pyxel.run(self.update, self.draw)
+        
+    def update(self):
+        if pyxel.btnp(pyxel.KEY_Q):
+            pyxel.quit()
+        
+    def draw(self):
+        pyxel.cls(0)
+        pyxel.text(55, 41, "Hello, Pyxel!", pyxel.frame_count % 16)
+        pyxel.blt(61, 66, 0, 0, 0, 38, 16)
+        
+        
+App()
+</code></pre><br>
+        とまあ、ここまでは順調だったのですが、いざゲームを作ろうとしたところ<br>
+        なにがなんだかさっぱりで、READMEを読みながらではなにもできなかったため、<br>
+        YouTubeで使い方を調べて勉強しながらゲームを作り始めました！<br>
+
+
+        <h3>【チュートリアル】</h3>
+
+
+        ここからは自分が忘れないようにすることも兼ねて、ドキュメンテーション<br>
+        をしたいと思います。<br>
+        <br>
+        まずは簡単なプログラミングから。<br>
+        <br>
+<pre><code>
+import pyxel #Pyxelライブラリ呼び出し
+
+
+pyxel.init(120,120) #120X120ピクセルの領域を初期化(init = initialization)
+
+pyxel.cls(14) #()内の数字の色で初期化
+
+pyxel.text(20,20, "Hello,world!",7) #20X20の位置から、7番目の色(白)で文字を表示
+
+pyxel.line(0,30,120,30,5) #(x1,y1地点からx2,y2地点までを5番目の色(青))で線を引く
+
+pyxel.show() #画面を表示。ESCが押されるまで待機する
+</code></pre><br>
+        <br>
+        ※使用しているカラーパレット<br>
+        <img src="./images/4-1.png" width="40%"><br>
+        <a href="https://github.com/kitao/pyxel/raw/main/docs/images/05_color_palette.png">参考</a><br>
+        <br>
+        このコードを実行すると、このような画面が表示されます！！<br>
+        <img src="./images/4-2.png" width="40%"><br>
+        無事指定通りにプログラムが動きました！！やったね！！<br>
+        ちなみに、画面内の座標は<br>
+        画面右上端が(x=0,y=0)で、<br>
+        画面左下端が(x=120,y=120)になっています！<br>
+        <h3>【図形の描写】</h3>
+        ここまでできたら、今度は図形を描写したいと思います。<br>
+        Pyxelには、図形を描写する機能もあるので、こちらをどんどん使っていきます！<br>
+<pre><code>
+import pyxel
+
+
+pyxel.init(120,120)
+
+pyxel.cls(14)
+
+pyxel.text(20,20, "Hello,world!",7)
+
+pyxel.line(0,30,120,30,5)
+
+pyxel.circ(60,60,10,7) #(x,y地点に半径10の円を7番目の色)で表示する
+
+pyxel.tri(30,100,60,80,90,100,7) #(x1,y1,x2,y2,x3,y3の地点を頂点とした三角形を7番の色)で表示
+
+pyxel.rect(10,70,10,10,7) #(x,yから、幅,高さ,色番号)の四角形を表示
+
+pyxel.rectb(18,18,50,10,7) #(x,yから、幅,高さ,色番号)の四角形の枠線を表示。circb/tribで、円の枠線、三角形の枠線にもできる。
+
+pyxel.show() #画面を表示。ESCが押されるまで待機する
+</code></pre><br>
+        コードを見やすくするために、前回と変わらないところの#は消してあります。<br>
+        <br>
+        このコードを実行すると、今度はこうなります！！<br>
+        <img src="./images/4-3.png" width="40%"><br>
+        今回も指定通りにプログラムを動かせました！！いぇい！！<br>
+        <br>
+        ここまで出来るようになれば、ついにゲーム画面を作成できるように<br>
+        なります！！<br>
+        <br>
+        例として、RPG風の画面を作成してみました！<br>
+        コードはこちら。↓<br>
+<pre><code>
+import pyxel #Pyxelライブラリ呼び出し
+
+
+pyxel.init(120,120) #120X120ピクセルの領域を初期化(init = initialization)
+
+pyxel.cls(0) #()内の数字の色で初期化
+
+pyxel.text(10,85,"Player",7) #文字を表示
+
+pyxel.text(20,100,"Oh! Slime is Here!!",7) #文字を表示
+
+pyxel.rectb(5,80,110,35,7) #文字枠
+
+pyxel.tri(60,16,66,25,54,25,7) #スライムの頭の部分
+
+pyxel.elli(40,25,40,30,7) #スライムの本体部分
+
+pyxel.circb(52,35,3,0) #スライムの右目
+
+pyxel.circb(68,35,3,0) #スライムの左目
+
+pyxel.rect(55,45,11,2,0) #スライムの口
+
+pyxel.show()
+</code></pre><br>
+        このコードを実行すると、このような画面が表示されます！！<br>
+        <img src="./images/4-4.png" width="40%"><br>
+        シンプルな画面ですが、それっぽく作れました！！<br>
+        <br>
+        ただ、これだけだと画面に図形を組み合わせて描写しているだけで<br>
+        つまらないので、アニメーションをつけたいと思...ったのですが、<br>
+        ここで時間切れ。提出期限になってしまったので一旦ここまでです。<br>
+        また時間が多く確保できるときに勉強し直して、アニメーションまでつけれる<br>
+        ようになりたいです！
+        <h3>【感想】</h3>
+        このライブラリを見つけ出したときには、結構簡単にゲームを<br>
+        作れる！！と思ったのですが、知識をつけないとどうすることもできない<br>
+        ことを実感。レトロゲームですらここまで大変なのだから、世に出回っている<br>
+        ゲームがどれだけ凄いものなのか、身に染み込みました。<br>
+        全てのゲームクリエイターに感謝！！<br>
+        <h3>【Spescial Thanks!!】</h3>
+        <a href="https://github.com/kitao/pyxel/blob/main/docs/README.ja.md" target="_blank">Pyxel</a><br>
+        <a href="https://youtu.be/ZoAiEBGbTBo?si=uPa_Rj9KfgxQZxE1" target="_blank">【Pyxel入門】 Pythonでレトロなゲームを作ろう！</a><br>
+        <a href="https://youtu.be/8XfwxIybT_o?si=YiIAz67tvUHXsUMf" target="_blank">【Pyxel入門】 Pythonでレトロなゲームを作ろう！②ゲーム作成ことはじめ</a><br>
+        <a href="https://youtu.be/G4Ah5nNXp5w?si=BBV3ryHDYyRQdmpi" target="_blank">【Pyxel入門】 Pythonでレトロなゲームを作ろう！③動きと入力</a><br>
+        </div>
+</body>
+
+   
