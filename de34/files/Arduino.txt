@@ -1,0 +1,129 @@
+// --- 関数プロトタイプ宣言 ---
+void moveToFloor(int targetFloor);
+void waitMillis(unsigned long ms);
+void stepMotor(int step);
+
+// --- ピンと定数定義 ---
+const int motorPins[4] = {8, 9, 10, 11};
+const int stepTable[4][4] = {
+  {1, 0, 1, 0},
+  {0, 1, 1, 0},
+  {0, 1, 0, 1},
+  {1, 0, 0, 1}
+};
+const int buttonPins[5] = {2, 3, 4, 5, 6};       // 1階～5階ボタン
+const int floorSteps[5] = {0, 145, 290, 430, 570};
+const int stepDelay = 5;
+int currentFloor = 0;
+
+bool prevOn = false;
+bool currentOn = false;
+bool busy = false;
+
+unsigned long lastButtonMillis = 0;
+const unsigned long idleTimeout = 10000; // 10秒
+
+// おみくじ名配列
+const char* omikujiResult[5] = {"末吉", "小吉", "中吉", "吉", "大吉"};
+
+void setup() {
+  Serial.begin(9600);
+  for (int i = 0; i < 4; i++) {
+    pinMode(motorPins[i], OUTPUT);
+    digitalWrite(motorPins[i], LOW);
+  }
+  for (int i = 0; i < 5; i++) {
+    pinMode(buttonPins[i], INPUT_PULLUP);
+  }
+  randomSeed(analogRead(0));
+}
+
+void loop() {
+  // IoT（ON/OFF）シリアル受信
+  if (Serial.available() > 0) {
+    String command = Serial.readStringUntil('\n');
+    command.trim();
+    if (command == "ON") {
+      currentOn = true;
+    } else if (command == "OFF") {
+      currentOn = false;
+    }
+  }
+
+  // IoT抽選モード（ON→OFFの立ち上がりでのみ動作）
+  if (!busy && (currentOn && !prevOn)) {
+    busy = true;
+
+    // 必ず1階へ戻る
+    moveToFloor(0);
+
+    // 0～4の中から抽選
+    int targetFloor = random(0, 5); // 0=1階, 4=5階
+
+    moveToFloor(targetFloor);
+
+    // --- 抽選結果をシリアル送信 ---
+    Serial.print("OMIKUJI:");
+    Serial.println(omikujiResult[targetFloor]);
+
+    waitMillis(5000);
+
+    // 1階へ戻る
+    moveToFloor(0);
+    busy = false;
+  }
+
+  // ボタン呼び出し（どれか押されたらその階へ。戻らずそのまま待機）
+  if (!busy) {
+    bool buttonPressed = false;
+    for (int i = 0; i < 5; i++) {
+      if (digitalRead(buttonPins[i]) == LOW) {
+        moveToFloor(i);
+        lastButtonMillis = millis(); // ボタン押下時刻更新
+        delay(500); // チャタリング防止
+        buttonPressed = true;
+        break;
+      }
+    }
+
+    // 10秒間何もボタン入力なければ自動で1階に戻る
+    if (!buttonPressed && currentFloor != 0 && (millis() - lastButtonMillis > idleTimeout)) {
+      moveToFloor(0);
+      lastButtonMillis = millis(); // 戻ったらリセット
+    }
+  }
+
+  // モーター停止
+  if (!currentOn && !busy) {
+    for (int i = 0; i < 4; i++) digitalWrite(motorPins[i], LOW);
+  }
+  prevOn = currentOn;
+}
+
+// 指定階まで移動
+void moveToFloor(int targetFloor) {
+  if (targetFloor == currentFloor) return;
+  int stepsToMove = floorSteps[targetFloor] - floorSteps[currentFloor];
+  int direction = (stepsToMove >= 0) ? 1 : -1;
+  stepsToMove = abs(stepsToMove);
+
+  for (int i = 0; i < stepsToMove; i++) {
+    if (direction > 0) stepMotor(i % 4);
+    else stepMotor((4 - (i % 4)) % 4);
+    delay(stepDelay);
+  }
+  currentFloor = targetFloor;
+}
+
+// ウェイト
+void waitMillis(unsigned long ms) {
+  unsigned long start = millis();
+  while (millis() - start < ms) delay(10);
+}
+
+// 1ステップ動作
+void stepMotor(int step) {
+  for (int i = 0; i < 4; i++) {
+    digitalWrite(motorPins[i], stepTable[step][i]);
+  }
+}

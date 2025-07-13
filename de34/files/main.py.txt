@@ -1,0 +1,35 @@
+import dfLink
+import time
+
+serial_port = ''    # ←自分の環境に合わせて
+pkey = ''           # ←自分の環境に合わせて
+
+my_arduino = dfLink.set_serial(serial_port, 9600)
+
+prev_int_data = 0  # 前回値
+
+while True:
+    data_list = dfLink.getData_From_dfLink(pkey=pkey)
+    try:
+        int_data = int(data_list[0][2])
+        # 0→1の変化時だけ抽選トリガ
+        if prev_int_data == 0 and int_data == 1:
+            # ON/OFFを送って抽選
+            my_arduino.write(('ON\n').encode())
+            time.sleep(0.2)
+            my_arduino.write(('OFF\n').encode())
+            # サーバーからデータを書き換えて、すぐ0に戻す
+            # （dfLinkのaddData_To_textfile等でサーバーデータを書き換え）
+            dfLink.sendData_To_dfLink(pkey=pkey, int_data='0')
+        prev_int_data = int_data
+    except Exception as e:
+        pass
+
+    # --- Arduinoからの抽選結果を受信 ---
+    while my_arduino.in_waiting:
+        line = my_arduino.readline().decode(errors="ignore").strip()
+        if line.startswith("OMIKUJI:"):
+            omikuji = line.replace("OMIKUJI:", "")
+            print(f"抽選結果: {omikuji}")
+
+    time.sleep(0.1)
